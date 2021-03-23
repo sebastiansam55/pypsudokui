@@ -4,10 +4,15 @@ import random
 import json
 
 def check_consecutive(l: list):
-    l.sort()
+    """
+    Check if l has one of 1-9.
+    Assumes l in appropriate size.
+    Quick checks via sum
+    """
     onetonine = [1,2,3,4,5,6,7,8,9]
     if sum(l) != 45:
         return False
+    l.sort()
     elif onetonine == l:
         # print("valid section 1-9")
         return True
