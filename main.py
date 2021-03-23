@@ -1,17 +1,15 @@
 #!/usr/bin/python3
 
 import random
-import sys
 import json
 
 def check_consecutive(l: list):
-    onetonine = list(range(1,10))
-    if len(l)!=9:
-        raise ValueError
-    if sum(l) != sum(onetonine):
+    l.sort()
+    onetonine = [1,2,3,4,5,6,7,8,9]
+    if sum(l) != 45:
         return False
-    elif onetonine.sort() == l.sort():
-        # print("consecutive")
+    elif onetonine == l:
+        # print("valid section 1-9")
         return True
 
 def get_grid(grid, x, y):
@@ -89,6 +87,13 @@ with open('pydigits.json', 'r') as f:
         # print(len(l))
         grid = mk_grid(l)
         # print(grid)
+        fail = False
+        for line in grid:
+            fail = not check_consecutive(line)
+            if fail: break
+        if count % 10000 == 0: print("Failed grids: ", count)
+        if fail: continue
+        print("All lines good")
         if check_super_grid(grid):
             print("Found!")
             print(grid)
@@ -96,35 +101,5 @@ with open('pydigits.json', 'r') as f:
             print(l)
             #TODO also need to check lines.
             # assuming that we ever find any...
-        else:
-            if count % 10000 == 0:
-                print("Failed grids: ", count)
-        # break
-
-sys.exit()
-
-l = list(range(1,10))
-print(check_consecutive(l))
-
-l1 = [1,1,2,3,4,5,6,7,8]
-print(check_consecutive(l1))
-
-sud = gen_test_sudoku_filled()
-for line in sud:
-    print(line)
-
-print(get_grid(sud, 0,0))
-print(get_grid(sud, 0,1))
-print(get_grid(sud, 0,2))
-
-print(get_grid(sud, 1,0))
-print(get_grid(sud, 1,1))
-print(get_grid(sud, 1,2))
-
-print(get_grid(sud, 2,0))
-print(get_grid(sud, 2,1))
-print(get_grid(sud, 2,2))
-
-print(check_grid(get_grid(sud,0,0)))
-
+        break
 
