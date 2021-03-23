@@ -12,7 +12,7 @@ def check_consecutive(l: list):
     if sum(l) != 45:
         return False
     l.sort()
-    elif onetonine == l:
+    if onetonine == l:
         # print("valid section 1-9")
         return True
 
