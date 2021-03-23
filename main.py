@@ -21,12 +21,16 @@ def get_grid(grid, x, y):
     return grid
 
 def check_super_grid(grid):
+    valid_grid = 0
     for x in range(0,3):
         for y in range(0,3):
             mini_grid = get_grid(grid, x,y)
             if check_grid(mini_grid):
+                valid_grid += 1
                 pass
             else:
+                if valid_grid>3:
+                    print("Valid grids before fail", valid_grid)
                 return False
     return True
 
@@ -90,8 +94,10 @@ with open('pydigits.json', 'r') as f:
             print(grid)
             print(digit)
             print(l)
+            #TODO also need to check lines.
+            # assuming that we ever find any...
         else:
-            if count % 100 == 0:
+            if count % 10000 == 0:
                 print("Failed grids: ", count)
         # break
 
