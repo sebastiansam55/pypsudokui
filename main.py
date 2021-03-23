@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import random
 import json
 
 def check_consecutive(l: list):
@@ -51,24 +50,6 @@ def check_grid(grid):
     Checks if digits 1-9 are there
     """
     return check_consecutive([j for i in grid for j in i])
-
-def gen_test_sudoku_filled():
-    ret_list = [
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0],
-    ]
-    for i in range(0,9):
-        for j in range(0,9):
-            ret_list[i][j] = random.randrange(1,10)
-
-    return ret_list
 
 def mk_grid(l: str):
     """
