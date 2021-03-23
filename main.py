@@ -77,12 +77,17 @@ def mk_grid(l: str):
 
 with open('pydigits.json', 'r') as f:
     # load in data, slower way but it is front loaded so no big deal
+    # d = f.read() # use this if your data is stored as a single line of digits
+
+
+    # code for loading json
     d = ""
     for line in f:
         if len(line)<10:
             break
         data = json.loads(line.strip())
         d+=data['content']
+    # comment lines between to disable json load
 
     for count,digit in enumerate(range(81,len(d))):
         l = d[digit-81:digit]
