@@ -2,7 +2,8 @@
 
 import argparse
 import sys
-import multiprocessing
+import os
+import multiprocessing as mp
 
 def check_consecutive(l: list):
     """
@@ -76,9 +77,9 @@ def mk_grid(l: str):
 
     return ret_list
 
-def grid_loop(d):
+def grid_loop(d, print_interval, conn):
+    pid = os.getpid()
     length = len(d)
-    # print(d[:20])
     print("Checking through {:,} digits of pi".format(length))
     for count,digit in enumerate(range(81,length)):
         l = d[digit-81:digit]
@@ -88,7 +89,9 @@ def grid_loop(d):
         for line in grid:
             fail = not check_consecutive(line)
             if fail: break
-        if count % 100000 == 0: print("Failed grids: {:,}/{:,} {}%".format(count, length, round(count/length*100, 5)))
+        if count % print_interval == 0:
+            message = "Failed grids: {:,}/{:,} {}%".format(count, length, round(count/length*100, 5))
+            conn.send(pid)
         if fail: continue
         #this did not fire within the first 10 million digits.
         print("All lines good")
@@ -111,6 +114,7 @@ if __name__ == "__main__":
     parser.add_argument('-j', '--json', dest="json", action="store", help="Single line digit file")
     parser.add_argument('-t', '--threads', dest="threads", action="store", default="1", help="Number of threads to spawn")
     parser.add_argument('-m', '--max-digits', dest="max", action="store", default="-1", help="Max digits to test (for debugging)")
+    parser.add_argument('-i', '--interval', dest="interval", action="store", default="100000", help="Interval to output status at (times thread if applicable)")
 
 
     args = parser.parse_args()
@@ -139,16 +143,29 @@ if __name__ == "__main__":
     #TODO allow ranges to overlap to avoid missing some combinations
     length = len(d)
     threads = int(args.threads)
+    print_interval = int(args.interval)
     step = int(length/threads)
     start = 0
+    parent, child = mp.Pipe()
+    pids = []
     for t in range(step, length, step):
         print(start,t)
-        process = multiprocessing.Process(target=grid_loop, args=(d[start:t],))
+        process = mp.Process(target=grid_loop, args=(d[start:t], print_interval, child))
         process.start()
-        # grid_loop(d[start:t])
-
+        pids.append(process.pid)
         start = t
-    # grid_loop(d)
+
+    completed = 0
+    while True:
+        #collect messages
+        if parent.poll(5):
+            pid = parent.recv()
+            completed += print_interval
+            if pid == pids[0]:
+                message = "Failed grids: {:,}/{:,} {}%".format(completed, length, round(completed/length*100, 5))
+                print(message)
+        else:
+            break
 
 
 #TODO add someway to take advantage of threading
