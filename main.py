@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
-import json
+import argparse
+import sys
 
 def check_consecutive(l: list):
     """
@@ -75,21 +76,36 @@ def mk_grid(l: str):
     return ret_list
 
 
-with open('pydigits.json', 'r') as f:
-    # load in data, slower way but it is front loaded so no big deal
-    # d = f.read() # use this if your data is stored as a single line of digits
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="pypsudokui")
 
+    parser.add_argument('-d', '--digits', dest="digits", action="store", help="Single line digit file")
+    parser.add_argument('-j', '--json', dest="json", action="store", help="Single line digit file")
 
-    # code for loading json
-    d = ""
-    for line in f:
-        if len(line)<10:
-            break
-        data = json.loads(line.strip())
-        d+=data['content']
-    # comment lines between to disable json load
+    args = parser.parse_args()
 
-    for count,digit in enumerate(range(81,len(d))):
+    if args.digits:
+        with open(args.digits, 'r') as f:
+            # load in data, slower way but it is front loaded so no big deal
+            d = f.read() # use this if your data is stored as a single line of digits
+            d = d.replace(".", "")
+    elif args.json:
+        import json
+        with open(args.json, 'r') as f:
+            # code for loading json
+            d = ""
+            for line in f:
+                if len(line)<10:
+                    break
+                data = json.loads(line.strip())
+                d+=data['content']
+    else:
+        sys.exit("No pi digit file specified")
+
+    length = len(d)
+    # print(d[:20])
+    print("Checking through {:,} digits of pi".format(length))
+    for count,digit in enumerate(range(81,length)):
         l = d[digit-81:digit]
         grid = mk_grid(l)
         fail = False
@@ -97,7 +113,7 @@ with open('pydigits.json', 'r') as f:
         for line in grid:
             fail = not check_consecutive(line)
             if fail: break
-        if count % 10000 == 0: print("Failed grids: ", count)
+        if count % 100000 == 0: print("Failed grids: {:,}/{:,} {}%".format(count, length, round(count/length, 5)))
         if fail: continue
         #this did not fire within the first 10 million digits.
         print("All lines good")
@@ -110,4 +126,8 @@ with open('pydigits.json', 'r') as f:
         #TODO if this condition is ever reached the columns
         # should also be checked.
         break
+
+
+#TODO add someway to take advantage of threading
+# divide length by n number of threads and start n separate threads
 
