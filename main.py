@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+import multiprocessing
 
 def check_consecutive(l: list):
     """
@@ -75,12 +76,42 @@ def mk_grid(l: str):
 
     return ret_list
 
+def grid_loop(d):
+    length = len(d)
+    # print(d[:20])
+    print("Checking through {:,} digits of pi".format(length))
+    for count,digit in enumerate(range(81,length)):
+        l = d[digit-81:digit]
+        grid = mk_grid(l)
+        fail = False
+        #check each line for consecutive digits
+        for line in grid:
+            fail = not check_consecutive(line)
+            if fail: break
+        if count % 100000 == 0: print("Failed grids: {:,}/{:,} {}%".format(count, length, round(count/length*100, 5)))
+        if fail: continue
+        #this did not fire within the first 10 million digits.
+        print("All lines good")
+        #if all lines are good check grid.
+        if check_super_grid(grid):
+            print("Found!")
+            print(grid)
+            print(digit)
+            print(l)
+        #TODO if this condition is ever reached the columns
+        # should also be checked.
+        break
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pypsudokui")
 
     parser.add_argument('-d', '--digits', dest="digits", action="store", help="Single line digit file")
     parser.add_argument('-j', '--json', dest="json", action="store", help="Single line digit file")
+    parser.add_argument('-t', '--threads', dest="threads", action="store", default="1", help="Number of threads to spawn")
+    parser.add_argument('-m', '--max-digits', dest="max", action="store", default="-1", help="Max digits to test (for debugging)")
+
 
     args = parser.parse_args()
 
@@ -102,32 +133,24 @@ if __name__ == "__main__":
     else:
         sys.exit("No pi digit file specified")
 
+    if args.max != "-1":
+        d = d[:int(args.max)]
+    print("Spawning {} threads".format(args.threads))
+    #TODO allow ranges to overlap to avoid missing some combinations
     length = len(d)
-    # print(d[:20])
-    print("Checking through {:,} digits of pi".format(length))
-    for count,digit in enumerate(range(81,length)):
-        l = d[digit-81:digit]
-        grid = mk_grid(l)
-        fail = False
-        #check each line for consecutive digits
-        for line in grid:
-            fail = not check_consecutive(line)
-            if fail: break
-        if count % 100000 == 0: print("Failed grids: {:,}/{:,} {}%".format(count, length, round(count/length, 5)))
-        if fail: continue
-        #this did not fire within the first 10 million digits.
-        print("All lines good")
-        #if all lines are good check grid.
-        if check_super_grid(grid):
-            print("Found!")
-            print(grid)
-            print(digit)
-            print(l)
-        #TODO if this condition is ever reached the columns
-        # should also be checked.
-        break
+    threads = int(args.threads)
+    step = int(length/threads)
+    start = 0
+    for t in range(step, length, step):
+        print(start,t)
+        process = multiprocessing.Process(target=grid_loop, args=(d[start:t],))
+        process.start()
+        # grid_loop(d[start:t])
+
+        start = t
+    # grid_loop(d)
 
 
 #TODO add someway to take advantage of threading
 # divide length by n number of threads and start n separate threads
-
+# TODO multiprocessing or threading?
