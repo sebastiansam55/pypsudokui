@@ -77,6 +77,14 @@ def mk_grid(l: str):
 
     return ret_list
 
+class p_obj():
+    completed = 0
+    @staticmethod
+    def send(message):
+        p_obj.completed += print_interval
+        message = "Failed grids: {:,}/{:,} {}%".format(p_obj.completed, length, round(p_obj.completed/length*100, 5))
+        print(message)
+
 def grid_loop(d, print_interval, conn):
     pid = os.getpid()
     length = len(d)
@@ -89,9 +97,7 @@ def grid_loop(d, print_interval, conn):
         for line in grid:
             fail = not check_consecutive(line)
             if fail: break
-        if count % print_interval == 0:
-            message = "Failed grids: {:,}/{:,} {}%".format(count, length, round(count/length*100, 5))
-            conn.send(pid)
+        if count % print_interval == 0: conn.send((count, pid))
         if fail: continue
         #this did not fire within the first 10 million digits.
         print("All lines good")
@@ -144,6 +150,11 @@ if __name__ == "__main__":
     length = len(d)
     threads = int(args.threads)
     print_interval = int(args.interval)
+    if threads == 1:
+        p_obj.length = length
+        grid_loop(d, print_interval, p_obj)
+        sys.exit()
+
     step = int(length/threads)
     start = 0
     parent, child = mp.Pipe()
@@ -159,7 +170,7 @@ if __name__ == "__main__":
     while True:
         #collect messages
         if parent.poll(5):
-            pid = parent.recv()
+            count, pid = parent.recv()
             completed += print_interval
             if pid == pids[0]:
                 message = "Failed grids: {:,}/{:,} {}%".format(completed, length, round(completed/length*100, 5))
@@ -167,7 +178,3 @@ if __name__ == "__main__":
         else:
             break
 
-
-#TODO add someway to take advantage of threading
-# divide length by n number of threads and start n separate threads
-# TODO multiprocessing or threading?
